@@ -4,11 +4,21 @@ from django.conf import settings
 import time
 import os
 import django
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dailyfresh.settings")
 django.setup()
 
 app = Celery('celery_tasks.tasks',broker='redis://127.0.0.1:6379/8')
 Celery()
+
+from kombu import serialization
+serialization.registry._decoders.pop("application/x-python-serialize")
+
+app.conf.update(
+    CELERY_ACCEPT_CONTENT = ['json'],
+    CELERY_TASK_SERIALIZER = 'json',
+    CELERY_RESULT_SERIALIZER = 'json',
+)
 
 @app.task
 def send_active_email(to_email,username,token):
